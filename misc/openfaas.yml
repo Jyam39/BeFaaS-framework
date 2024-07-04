@@ -10,3 +10,4 @@ functions:
     environment:
       IS_OPENFAAS: 1
       REDIS_ENDPOINT: release-name-redis-master.redis.svc.cluster.local:6397
+      REDIS_PASSWD: lJKM6cwRN4
