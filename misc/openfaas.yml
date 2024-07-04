@@ -6,6 +6,7 @@ functions:
   ${FUNCTION_NAME:-NO_NAME_PROVIDED}:
     lang: node
     handler: ${FUNCTION_HANDLER}
-    image: ${DOCKERHUB_USER:-DOCKERHUB_USER_MISSING}/${FUNCTION_NAME:-NO_NAME_PROVIDED}:latest
+    image: jyam39/${FUNCTION_NAME:-NO_NAME_PROVIDED}:latest
     environment:
       IS_OPENFAAS: 1
+      REDIS_ENDPOINT: release-name-redis-master.redis.svc.cluster.local:6397
