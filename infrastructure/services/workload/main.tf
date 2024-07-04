@@ -1,73 +1,43 @@
-data "terraform_remote_state" "exp" {
-  backend = "local"
+provider "local" {}
 
-  config = {
-    path = "${path.module}/../../experiment/terraform.tfstate"
-  }
-}
+provider "null" {}
 
-data "terraform_remote_state" "vpc" {
-  backend = "local"
-
-  config = {
-    path = "${path.module}/../vpc/terraform.tfstate"
-  }
-}
+//variable "ssh_config" {}
 
 locals {
-  project_name    = data.terraform_remote_state.exp.outputs.project_name
-  deployment_id   = data.terraform_remote_state.exp.outputs.deployment_id
-  default_subnet  = data.terraform_remote_state.vpc.outputs.default_subnet
-  ssh_key_name    = data.terraform_remote_state.vpc.outputs.ssh_key_name
-  security_groups = data.terraform_remote_state.vpc.outputs.security_groups
-  ssh_private_key = data.terraform_remote_state.vpc.outputs.ssh_private_key
+    _ssh_config = {
+        remote = {
+            host = "172.16.2.10"
+            user = "jyam"
+            key = "~/.ssh/keys/cmc"
+        },
+        bastion = {
+            host = "192.168.20.101"
+            user = "hiragi"
+            key = "~/.ssh/keys/cmc"
+        },
+    }
+    //ssh_config = local._ssh_config[var.ssh_config]
+    project_name    = "my-local-project"
+    deployment_id   = "my-deployment-id"
 }
 
-data "aws_ami" "ubuntu_lts" {
-  most_recent = true
-  name_regex  = "^ubuntu/images/hvm-ssd/ubuntu-jammy-22.04-amd64-server-\\d+$"
-  owners      = ["099720109477"]
-}
-
-resource "aws_instance" "workload" {
-  ami                                  = data.aws_ami.ubuntu_lts.id
-  instance_type                        = "t3a.medium"
-  associate_public_ip_address          = true
-  subnet_id                            = local.default_subnet
-  key_name                             = local.ssh_key_name
-  vpc_security_group_ids               = local.security_groups
-  instance_initiated_shutdown_behavior = "terminate"
-
-  tags = {
-    Name = "${local.project_name}-workload"
-  }
-
-  provisioner "file" {
-    connection {
-      type        = "ssh"
-      user        = "ubuntu"
-      host        = self.public_ip
-      private_key = local.ssh_private_key
-      agent       = false
+resource "null_resource" "workload" {
+    provisioner "remote-exec" {
+        connection {
+            type        = "ssh"
+            user        = local._ssh_config.remote.user 
+            host        = local._ssh_config.remote.host
+            private_key = file(local._ssh_config.remote.key)
+            agent       = false
+            bastion_host = local._ssh_config.bastion.host
+            bastion_user = local._ssh_config.bastion.user
+            bastion_private_key = file(local._ssh_config.bastion.key)
+        }
+        inline = [
+          "sudo apt-get update",
+          "docker pull jyam39/artillery",
+          "docker run -it --rm -e BEFAAS_DEPLOYMENT_ID=${local.deployment_id} jyam39/artilley"
+        ]
     }
-    source      = "${path.module}/../../../artillery/image.tar.gz"
-    destination = "/tmp/image.tar.gz"
-  }
-
-  provisioner "remote-exec" {
-    connection {
-      type        = "ssh"
-      user        = "ubuntu"
-      host        = self.public_ip
-      private_key = local.ssh_private_key
-      agent       = false
-    }
-
-    inline = [
-      "sudo apt-get update",
-      "curl -sSL https://get.docker.com/ | sh",
-      "sudo docker load -i /tmp/image.tar.gz",
-      "sudo docker run -it --rm -e BEFAAS_DEPLOYMENT_ID=${local.deployment_id} befaas/artillery"
-    ]
-  }
 }
