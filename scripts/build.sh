@@ -99,25 +99,24 @@ for service in $(jq -r ".services | keys[] " $exp_config); do
   echo $service
   if [[ $service == publisher* ]]; then
     if [[ $service == *Azure ]]; then 
-	  hasAzurePublisher=true
-	  continue
-	fi
+      hasAzurePublisher=true
+      continue
+    fi
     echo "Going to build service: $service" | chalk cyan
-	fct_dir=$srv_dir/$service/publisher
+    fct_dir=$srv_dir/$service/publisher
 
     rm -rf $fct_dir/_build
     mkdir $fct_dir/_build
-	
-	injectFname="process.env.BEFAAS_FN_NAME='${service}';"
+    
+    injectFname="process.env.BEFAAS_FN_NAME='${service}';"
     echo "${injectFname}$(cat $fct_dir/index.js)" > $fct_dir/_index.js    
 
     npx ncc build $fct_dir/_index.js -o $fct_dir/build
     echo $PKG_JSON > $fct_dir/build/package.json
     cp $exp_config $fct_dir/build/
     cd $fct_dir/build && zip -r ../_build/$service.zip * && cd -	
-	
-	rm -rf $fct_dir/build $fct_dir/_index.js
-	
+    
+    rm -rf $fct_dir/build $fct_dir/_index.js
   fi
 done
 
