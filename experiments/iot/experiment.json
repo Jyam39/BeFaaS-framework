@@ -1,8 +1,6 @@
 {
   "services": {
-    "redisAws": {},
-	"publisherAws": {},
-	"publisherTinyfaas": {},
+  "redisKube": {},
 	"workload": {
       "config": "./workload.yml"
     }
@@ -10,39 +8,39 @@
   "program": {
     "functions": {
       "trafficsensorfilter": {
-        "provider": "tinyfaas",
+        "provider": "openfaas",
 		"call": "async",
         "calls": ["movementplan"]
       },
       "weathersensorfilter": {
-        "provider": "aws",
+        "provider": "openfaas",
 		"call": "async",
         "calls": ["roadcondition"]
       },
       "roadcondition": {
-        "provider": "aws",
+        "provider": "openfaas",
 		"call": "async",
         "calls": ["setlightphasecalculation"]
       },
       "emergencydetection": {
-        "provider": "tinyfaas",
+        "provider": "openfaas",
         "calls": ["setlightphasecalculation"]
       },
       "trafficstatistics": {
-        "provider": "aws"
+        "provider": "openfaas"
       },
       "setlightphasecalculation": {
-        "provider": "aws"
+        "provider": "openfaas"
       },
       "getlightphasecalculation": {
-        "provider": "aws"
+        "provider": "openfaas"
       },
       "objectrecognition": {
-        "provider": "tinyfaas",
+        "provider": "openfaas",
         "calls": ["trafficstatistics", "movementplan", "emergencydetection"]
       },
       "movementplan": {
-        "provider": "tinyfaas",
+        "provider": "openfaas",
 		"call": "async",
         "calls": ["setlightphasecalculation"]
       }
