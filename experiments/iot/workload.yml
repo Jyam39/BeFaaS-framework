@@ -13,7 +13,7 @@ config:
 scenarios:
   - flow:
       - post:
-          url: '{{ publisherTinyfaas }}/call'
+          url: 'trafficsensorfilter'
           json:
             fun: 'trafficsensorfilter'
             event:
@@ -27,7 +27,7 @@ scenarios:
     weight: 10
   - flow:
       - post:
-          url: '{{ publisherAws }}/call'
+          url: 'weathersensorfilter'
           json:
             fun: 'weathersensorfilter'
             event:
@@ -41,10 +41,9 @@ scenarios:
     weight: 1
   - flow:
       - post:
-          url: '{{ objectrecognition }}'
+          url: 'objectrecognition'
           formData:
             image: 'placeholder'
-
           beforeRequest: 'emergencyEveryTwoMinutesFiveSecondsEach'
           afterResponse: 'afterResponse'
     name: 'objectrecognition'
